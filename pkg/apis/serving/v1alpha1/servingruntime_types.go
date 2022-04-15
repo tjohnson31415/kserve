@@ -54,6 +54,13 @@ type ServingRuntimePodSpec struct {
 	// +patchStrategy=merge
 	Containers []corev1.Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name" validate:"required"`
 
+	// List of volumes that can be mounted by containers belonging to the pod.
+	// More info: https://kubernetes.io/docs/concepts/storage/volumes
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge,retainKeys
+	Volumes []corev1.Volume `json:"volumes,omitempty" patchStrategy:"merge,retainKeys" patchMergeKey:"name" protobuf:"bytes,1,rep,name=volumes"`
+
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -67,8 +74,6 @@ type ServingRuntimePodSpec struct {
 	// If specified, the pod's tolerations.
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
-
-	// Possibly other things here
 }
 
 // ServingRuntimeSpec defines the desired state of ServingRuntime. This spec is currently provisional
@@ -129,23 +134,10 @@ type ServingRuntimeSpec struct {
 type ServingRuntimeStatus struct {
 }
 
-// ServerType constant for specifying the runtime name
-// +k8s:openapi-gen=true
-// +kubebuilder:validation:Enum=triton;mlserver
-type ServerType string
-
-// ServerType Enum
-const (
-	// Model server is Triton
-	Triton ServerType = "triton"
-	// Model server is MLServer
-	MLServer ServerType = "mlserver"
-)
-
 // +k8s:openapi-gen=true
 type BuiltInAdapter struct {
-	// ServerType can be one of triton/mlserver and the runtime's container must have the same name
-	ServerType ServerType `json:"serverType,omitempty"`
+	// ServerType determines which adapter is to be included
+	ServerType string `json:"serverType,omitempty"`
 	// Port which the runtime server listens for model management requests
 	RuntimeManagementPort int `json:"runtimeManagementPort,omitempty"`
 	// Fixed memory overhead to subtract from runtime container's memory allocation to determine model capacity
